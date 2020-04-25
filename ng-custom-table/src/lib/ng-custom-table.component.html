@@ -1,0 +1,164 @@
+<div class="mt-3 ml-3 mr-3">
+  <div class="table-container row">
+    <div class="col-6">
+    </div>
+    <div class="col-6">
+      <div class="float-right col-12">
+        <input class="form-control" type="text" [(ngModel)]="searchData.all"
+          (keyup)="backEndSearch && sendSearchText()" placeholder="Search All" />&nbsp;&nbsp;
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!backEndSearch">
+    <br />
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-bordered">
+        <thead>
+          <tr>
+            <ng-container *ngFor="let column of tableconfig.columns; let i = index;">
+              <td *ngIf="column.sort" class="cus"
+                (click)="order === column.columnObj?reverse = !reverse:'';column.reverse = !column.reverse;order = column.columnObj;"
+                [class.active]="order === column.columnObj"><b>{{column.title}}</b>
+                <span [hidden]="reverse && order == column.columnObj" class="float-right">▲</span>
+                <span *ngIf="order == column.columnObj" [hidden]="!reverse" class="float-right">▼</span>
+              </td>
+              <td *ngIf="!column.sort"><b>{{column.title}}</b></td>
+            </ng-container>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <ng-container *ngFor="let column of tableconfig.columns;">
+              <td *ngIf="column.filterString"><input class="form-control" type="text"
+                  [(ngModel)]="searchData[column.columnObj]" placeholder="Search..." />
+              </td>
+              <td *ngIf="!column.filterString"></td>
+            </ng-container>
+          </tr>
+          <ng-container
+            *ngFor=" let data of tableconfig.tableData | orderBy: order : reverse : caseInsensitive | filter  : tableconfig.columns : (searchData|json) | paginate: { itemsPerPage: itemsPerPage, currentPage: pageNo }">
+            <tr *ngIf="data !== -1">
+              <ng-container *ngFor="let column of tableconfig.columns;">
+                <ng-container *ngIf="column.columnObj !== 'action'">
+                  <td [width]="column.width" *ngIf="column.inputType == 'String'">{{data[column.columnObj]}}</td>
+                  <td [width]="column.width" *ngIf="column.inputType == 'Html'"
+                    [innerHtml]="sanitizeInnerHtml(data[column.columnObj])">
+                  </td>
+                  <td [width]="column.width" *ngIf="column.inputType == 'Component'">
+                    <ng-custom-view-component [cell]="transmitComponentData(data,column,data[column.columnObj])">
+                    </ng-custom-view-component>
+                  </td>
+                </ng-container>
+
+                <td [width]="column.width" *ngIf="column.columnObj === 'action'" id="action">
+                  <ng-container *ngIf="tableconfig.actionSetting.showActionColumn">
+                    <ng-container *ngFor=" let act of actionData">
+                      <ng-container *ngIf="act.type == 'button'">
+                        <button *ngIf="data[act.checkVariable] == act.checkValue" class="mr-2"
+                          (click)="sendResponseToUser(data,column,act)" [class]="act.class" data-toggle="tooltip"
+                          [title]="act.tooltip" [type]="act.type"><i [class]="act.classIcon"></i>{{act.title}}</button>
+                      </ng-container>
+                      <ng-container *ngIf="act.type == 'icon'">
+                        <a *ngIf="data[act.checkVariable] == act.checkValue" data-toggle="tooltip" [title]="act.tooltip"
+                          data-placement="top" (click)="sendResponseToUser(data,column,act)" [class]="act.class"
+                          class="mr-2"></a>
+                      </ng-container>
+                    </ng-container>
+                  </ng-container>
+                </td>
+              </ng-container>
+
+            </tr>
+            <tr *ngIf="data === -1">
+              <td [attr.colspan]="tableconfig.columns.length" class="text-danger text-center"> No Data Available</td>
+            </tr>
+          </ng-container>
+
+        </tbody>
+      </table>
+    </div>
+
+
+    <ng-pagination-util *ngIf="!(tableconfig.tableData.length === 0) && !tableconfig.displayAll" [pageNo]=pageNo
+      [input]="(tableconfig.tableData | filter : tableconfig.columns : (searchData|json))"
+      [totalRecords]="(tableconfig.tableData | filter : tableconfig.columns : (searchData|json))?.length"
+      [itemsPerPage]=itemsPerPage (getItemPerPage)="itemsPerPage=$event" (getPageNo)="pageNo=$event">
+    </ng-pagination-util>
+
+  </div>
+
+  <div *ngIf="backEndSearch">
+    <br />
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-bordered">
+        <thead>
+          <tr>
+            <ng-container *ngFor="let column of tableconfig.columns; let i = index;">
+              <td *ngIf="column.sort" class="cus"
+                (click)="order === column.columnObj?reverse = !reverse:'';column.reverse = !column.reverse;order = column.columnObj;sendTableChanges();"
+                [class.active]="order === column.columnObj"><b>{{column.title}}</b>
+                <span [hidden]="reverse && order == column.columnObj" class="float-right">▲</span>
+                <span *ngIf="order == column.columnObj" [hidden]="!reverse" class="float-right">▼</span>
+              </td>
+              <td *ngIf="!column.sort"><b>{{column.title}}</b></td>
+            </ng-container>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <ng-container *ngFor="let column of tableconfig.columns;">
+              <td *ngIf="column.filterString"><input class="form-control" type="text"
+                  [(ngModel)]="searchData[column.columnObj]" (keyup)="sendSearchText()" placeholder="Search..." />
+              </td>
+              <td *ngIf="!column.filterString"></td>
+            </ng-container>
+          </tr>
+          <ng-container
+            *ngFor=" let data of tableconfig.tableData | paginate: { itemsPerPage: itemsPerPage, currentPage: pageNo , totalItems: tableconfig.totalRecordsInBackend }">
+            <tr *ngIf="data !== -1">
+              <ng-container *ngFor="let column of tableconfig.columns;">
+                <ng-container *ngIf="column.columnObj !== 'action'">
+                  <td [width]="column.width" *ngIf="column.inputType == 'String'">{{data[column.columnObj]}}</td>
+                  <td [width]="column.width" *ngIf="column.inputType == 'Html'"
+                    [innerHtml]="sanitizeInnerHtml(data[column.columnObj])">
+                  </td>
+                  <td [width]="column.width" *ngIf="column.inputType == 'Component'">
+                    <ng-custom-view-component [cell]="transmitComponentData(data,column,data[column.columnObj])">
+                    </ng-custom-view-component>
+                  </td>
+                </ng-container>
+                <td [width]="column.width" *ngIf="column.columnObj === 'action'" id="action">
+                  <ng-container *ngIf="tableconfig.actionSetting.showActionColumn">
+                    <ng-container *ngFor=" let act of actionData">
+                      <ng-container *ngIf="act.type == 'button'">
+                        <button *ngIf="data[act.checkVariable] == act.checkValue" data-toggle="tooltip"
+                          [title]="act.tooltip" (click)="sendResponseToUser(data,column,act)" [class]="act.class"
+                          class="mr-2" [type]="act.type"><i [class]="act.classIcon"></i>{{act.title}}</button>
+                      </ng-container>
+                      <ng-container *ngIf="act.type == 'icon'">
+                        <a *ngIf="data[act.checkVariable] == act.checkValue" data-toggle="tooltip" [title]="act.tooltip"
+                          (click)="sendResponseToUser(data,column,act)" [class]="act.class" class="mr-2"></a>
+                      </ng-container>
+                    </ng-container>
+                  </ng-container>
+                </td>
+              </ng-container>
+
+            </tr>
+            <tr *ngIf="data === -1">
+              <td [attr.colspan]="tableconfig.columns.length" class="text-danger text-center"> No Data Available</td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-pagination-util *ngIf="!(tableconfig.tableData.length === 0) && !tableconfig.displayAll"
+      [input]="tableconfig.tableData" [pageNo]=pageNo [totalRecords]="tableconfig.totalRecordsInBackend"
+      [itemsPerPage]=itemsPerPage (getItemPerPage)="itemsPerPage=$event;sendTableChanges();"
+      (getPageNo)="pageNo=$event;sendTableChanges();">
+    </ng-pagination-util>
+
+  </div>
+
+</div>

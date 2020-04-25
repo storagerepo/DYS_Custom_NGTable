@@ -1,0 +1,40 @@
+@import '../../../../src/styles.scss';
+
+thead td {
+  // cursor: pointer;
+  background: $table-header-background-theme;
+  color:$table-header-text-theme;
+
+  // &.active {
+  //   color: white;
+  // }
+  margin-right: 15px;
+  margin-left: 15px;
+  span {
+    visibility: hidden;
+    float: right;
+  }
+
+  &.active {
+    cursor: pointer;
+    color:$sorting-arrow-theme;
+
+    span {
+      visibility: visible;
+    }
+  }
+}
+
+
+.table td {
+  font-size: 15px;
+}
+
+.cus {
+  cursor: pointer;
+}
+
+//to let all the contents in a table cell be in a a straight line.
+tr td{
+  white-space:nowrap;
+}
