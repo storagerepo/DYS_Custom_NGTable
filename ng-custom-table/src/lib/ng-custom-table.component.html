@@ -114,7 +114,7 @@
             </ng-container>
           </tr>
           <ng-container
-            *ngFor=" let data of tableconfig.tableData | filter  : tableconfig.columns : (searchData|json) | paginate: { itemsPerPage: itemsPerPage, currentPage: pageNo , totalItems: tableconfig.totalRecordsInBackend }">
+            *ngFor=" let data of tableconfig.tableData | paginate: { itemsPerPage: itemsPerPage, currentPage: pageNo , totalItems: tableconfig.totalRecordsInBackend }">
             <tr *ngIf="data !== -1">
               <ng-container *ngFor="let column of tableconfig.columns;">
                 <ng-container *ngIf="column.columnObj !== 'action'">
